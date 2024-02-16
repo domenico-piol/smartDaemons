@@ -12,6 +12,8 @@ let appInfo = "SmartDaemons " + version
 var allowedDaemons: [String]?
 var daemonLocations: [String]?
 
+var appUser = NSUserName()
+
 
 @available(macOS 13.0, *)
 @main
@@ -25,7 +27,12 @@ struct smartdaemons: ParsableCommand {
         dateFormatter.dateFormat = " - HH:mm dd.MM.YYYY"
         
         print(appInfo.bold() + dateFormatter.string(from: date).darkGray() + "\n")
-        
+                
+        if let sudoUser = ProcessInfo.processInfo.environment["SUDO_USER"] {
+            appUser = sudoUser
+            print("Running as root user!".backgroundColor(.orange1) + "\n")
+        }
+       
         do {
             try readConfigFiles()
         } catch {
@@ -46,9 +53,9 @@ func readConfigFiles() throws {
                                                         appropriateFor: nil,
                                                                 create: false)
 
-    let locationsConfigURL = applicationSupportFolderURL.appendingPathComponent(NSUserName() + "/.smartDaemons/locations.config")
+    let locationsConfigURL = applicationSupportFolderURL.appendingPathComponent(appUser + "/.smartDaemons/locations.config")
     
-    let daemonsConfigURL = applicationSupportFolderURL.appendingPathComponent(NSUserName() + "/.smartDaemons/daemons.config")
+    let daemonsConfigURL = applicationSupportFolderURL.appendingPathComponent(appUser + "/.smartDaemons/daemons.config")
     
     
     let data1 = try String(contentsOfFile: daemonsConfigURL.path(), encoding: String.Encoding.utf8)
